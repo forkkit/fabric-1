@@ -29,9 +29,11 @@ import (
 
 type Service struct {
 	models.BaseEntity
-	Name               string
-	TerminatorStrategy string
-	Terminators        []*Terminator
+	Name                       string
+	TerminatorStrategy         string
+	Terminators                []*Terminator
+	IdentityAddressingAllowed  bool
+	IdentityAddressingRequired bool
 }
 
 func (entity *Service) fillFrom(ctrl Controller, tx *bbolt.Tx, boltEntity boltz.Entity) error {
@@ -41,6 +43,8 @@ func (entity *Service) fillFrom(ctrl Controller, tx *bbolt.Tx, boltEntity boltz.
 	}
 	entity.Name = boltService.Name
 	entity.TerminatorStrategy = boltService.TerminatorStrategy
+	entity.IdentityAddressingAllowed = boltService.IdentityAddressingAllowed
+	entity.IdentityAddressingRequired = boltService.IdentityAddressingRequired
 	entity.FillCommon(boltService)
 
 	terminatorIds := ctrl.getControllers().stores.Service.GetRelatedEntitiesIdList(tx, entity.Id, db.EntityTypeTerminators)
@@ -55,9 +59,11 @@ func (entity *Service) fillFrom(ctrl Controller, tx *bbolt.Tx, boltEntity boltz.
 
 func (entity *Service) toBolt() *db.Service {
 	return &db.Service{
-		BaseExtEntity:      *boltz.NewExtEntity(entity.Id, entity.Tags),
-		Name:               entity.Name,
-		TerminatorStrategy: entity.TerminatorStrategy,
+		BaseExtEntity:              *boltz.NewExtEntity(entity.Id, entity.Tags),
+		Name:                       entity.Name,
+		TerminatorStrategy:         entity.TerminatorStrategy,
+		IdentityAddressingAllowed:  entity.IdentityAddressingAllowed,
+		IdentityAddressingRequired: entity.IdentityAddressingRequired,
 	}
 }
 
@@ -122,7 +128,7 @@ func (ctrl *ServiceController) Create(s *Service) error {
 	if err != nil {
 		return err
 	}
-	ctrl.cacheService(s)
+	// don't cache, wait for first read. entity may not match data store as data store may have set defaults
 	return nil
 }
 
@@ -133,7 +139,9 @@ func (ctrl *ServiceController) Update(s *Service) error {
 	if err != nil {
 		return err
 	}
-	ctrl.cacheService(s)
+
+	ctrl.RemoveFromCache(s.Id) // don't cache entity as not all fields may be changed, wait for read to reload
+
 	return nil
 }
 

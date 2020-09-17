@@ -45,9 +45,11 @@ func (h *createServiceHandler) HandleReceive(msg *channel2.Message, ch channel2.
 			cs.Service.Name = cs.Service.Id
 		}
 		service := &network.Service{
-			BaseEntity:         models.BaseEntity{Id: cs.Service.Id},
-			Name:               cs.Service.Name,
-			TerminatorStrategy: cs.Service.TerminatorStrategy,
+			BaseEntity:                 models.BaseEntity{Id: cs.Service.Id},
+			Name:                       cs.Service.Name,
+			TerminatorStrategy:         cs.Service.TerminatorStrategy,
+			IdentityAddressingAllowed:  cs.Service.IdentityAddressingAllowed,
+			IdentityAddressingRequired: cs.Service.IdentityAddressingRequired,
 		}
 		for _, terminator := range cs.Service.Terminators {
 			modelTerminator, err := toModelTerminator(h.network, terminator)

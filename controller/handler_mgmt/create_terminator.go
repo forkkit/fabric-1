@@ -80,16 +80,28 @@ func toModelTerminator(n *network.Network, e *mgmt_pb.Terminator) (*network.Term
 		precedence = xt.Precedences.Failed
 	}
 
+	var identity *string
+	var identitySecret *string
+
+	if e.Identity != "" {
+		identity = &e.Identity
+		if e.IdentitySecret != "" {
+			identitySecret = &e.IdentitySecret
+		}
+	}
+
 	return &network.Terminator{
 		BaseEntity: models.BaseEntity{
 			Id:   e.Id,
 			Tags: nil,
 		},
-		Service:    e.ServiceId,
-		Router:     router.Id,
-		Binding:    binding,
-		Address:    e.Address,
-		Cost:       uint16(e.Cost),
-		Precedence: precedence,
+		Service:        e.ServiceId,
+		Router:         router.Id,
+		Binding:        binding,
+		Address:        e.Address,
+		Identity:       identity,
+		IdentitySecret: identitySecret,
+		Cost:           uint16(e.Cost),
+		Precedence:     precedence,
 	}, nil
 }

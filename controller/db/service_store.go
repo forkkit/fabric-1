@@ -17,33 +17,53 @@
 package db
 
 import (
+	"fmt"
 	"github.com/openziti/fabric/controller/xt"
 	"github.com/openziti/fabric/controller/xt_smartrouting"
 	"github.com/openziti/foundation/storage/ast"
 	"github.com/openziti/foundation/storage/boltz"
+	"github.com/openziti/foundation/validation"
 	"go.etcd.io/bbolt"
 )
 
 const (
-	EntityTypeServices             = "services"
-	FieldServiceTerminatorStrategy = "terminatorStrategy"
+	EntityTypeServices                     = "services"
+	FieldServiceTerminatorStrategy         = "terminatorStrategy"
+	FieldServiceIdentityAddressingAllowed  = "identityAddressingAllowed"
+	FieldServiceIdentityAddressingRequired = "identityAddressingRequired"
 )
 
 type Service struct {
 	boltz.BaseExtEntity
-	Name               string
-	TerminatorStrategy string
+	Name                       string
+	TerminatorStrategy         string
+	IdentityAddressingAllowed  bool
+	IdentityAddressingRequired bool
 }
 
 func (entity *Service) LoadValues(_ boltz.CrudStore, bucket *boltz.TypedBucket) {
 	entity.LoadBaseValues(bucket)
 	entity.Name = bucket.GetStringOrError(FieldName)
 	entity.TerminatorStrategy = bucket.GetStringWithDefault(FieldServiceTerminatorStrategy, "")
+	entity.IdentityAddressingAllowed = bucket.GetBoolWithDefault(FieldServiceIdentityAddressingAllowed, false)
+	if entity.IdentityAddressingAllowed {
+		entity.IdentityAddressingRequired = bucket.GetBoolWithDefault(FieldServiceIdentityAddressingRequired, false)
+	}
 }
 
 func (entity *Service) SetValues(ctx *boltz.PersistContext) {
 	entity.SetBaseValues(ctx)
 	ctx.SetString(FieldName, entity.Name)
+
+	if ctx.IsCreate {
+		ctx.SetBool(FieldServiceIdentityAddressingAllowed, entity.IdentityAddressingAllowed)
+		if !entity.IdentityAddressingAllowed && entity.IdentityAddressingRequired {
+			reason := fmt.Sprintf("can not set %v true if %v is set to false", FieldServiceIdentityAddressingRequired, FieldServiceIdentityAddressingAllowed)
+			ctx.Bucket.SetError(validation.NewFieldError(reason, FieldServiceIdentityAddressingRequired, entity.IdentityAddressingRequired))
+			return
+		}
+	}
+
 	if entity.TerminatorStrategy == "" {
 		entity.TerminatorStrategy = xt_smartrouting.Name
 	}

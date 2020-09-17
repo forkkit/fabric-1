@@ -28,6 +28,7 @@ message SessionRequest {
     string ingressId = 1;
     string serviceId = 2;
     map<uint32, bytes> peerData = 3;
+    string identity = 4;
 }
 
 enum TerminatorPrecedence {
@@ -43,6 +44,8 @@ message CreateTerminatorRequest {
     map<uint32, bytes> peerData = 5;
     uint32 cost = 6;
     TerminatorPrecedence precedence = 7;
+    string identity = 8;
+    string identitySecret = 9;
 }
 
 message RemoveTerminatorRequest {

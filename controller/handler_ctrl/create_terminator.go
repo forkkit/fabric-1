@@ -65,6 +65,13 @@ func (h *createTerminatorHandler) HandleReceive(msg *channel2.Message, ch channe
 		Cost:       uint16(request.Cost),
 	}
 
+	if request.Identity != "" {
+		terminator.Identity = &request.Identity
+		if request.IdentitySecret != "" {
+			terminator.IdentitySecret = &request.IdentitySecret
+		}
+	}
+
 	if id, err := h.network.Terminators.Create(terminator); err == nil {
 		pfxlog.Logger().Infof("created terminator [t/%s]", id)
 		handler_common.SendSuccess(msg, ch, id)

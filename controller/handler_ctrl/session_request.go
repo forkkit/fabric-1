@@ -51,7 +51,11 @@ func (h *sessionRequestHandler) HandleReceive(msg *channel2.Message, ch channel2
 		 */
 		go func() {
 			id := &identity.TokenId{Token: request.IngressId, Data: request.PeerData}
-			if session, err := h.network.CreateSession(h.r, id, request.ServiceId); err == nil {
+			var identity *string
+			if request.Identity != "" {
+				identity = &request.Identity
+			}
+			if session, err := h.network.CreateSession(h.r, id, request.ServiceId, identity); err == nil {
 				responseMsg := ctrl_msg.NewSessionSuccessMsg(session.Id.Token, session.Circuit.IngressId)
 				responseMsg.ReplyTo(msg)
 

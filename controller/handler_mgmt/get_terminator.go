@@ -23,6 +23,7 @@ import (
 	"github.com/openziti/fabric/controller/network"
 	"github.com/openziti/fabric/pb/mgmt_pb"
 	"github.com/openziti/foundation/channel2"
+	"github.com/openziti/foundation/util/stringz"
 )
 
 type getTerminatorHandler struct {
@@ -77,6 +78,7 @@ func toApiTerminator(s *network.Terminator) *mgmt_pb.Terminator {
 		RouterId:   s.Router,
 		Binding:    s.Binding,
 		Address:    s.Address,
+		Identity:   stringz.OrEmpty(s.Identity),
 		Cost:       uint32(s.Cost),
 		Precedence: precedence,
 	}
